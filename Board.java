@@ -5,8 +5,8 @@ import java.util.function.Consumer;
 public class Board {
     public static final char MARK_POSITION = 'O';
     public static final char EMPTY_POSITION = '~';
-    public static final char HIT_POSITION = '~';
-    public static final char MISS_POSITION = '~';
+    public static final char HIT_POSITION = 'X';
+    public static final char MISS_POSITION = 'M';
 
     private final char[][] board;
     private static final int SIZE = 10;
@@ -65,10 +65,10 @@ public class Board {
     }
 
     public void mark(Position position) {
-        int rawIndex = getRow(position);
-        int colIndex = getCol(position);
+        int row = getRow(position);
+        int col = getCol(position);
 
-        this.board[rawIndex][colIndex] = MARK_POSITION;
+        this.board[row][col] = MARK_POSITION;
     }
 
     public boolean canMark(Position position) {
@@ -82,13 +82,38 @@ public class Board {
                isEmptyPosition(row, col + 1);
     }
 
+    public boolean shoot(Position position) {
+        int row = getRow(position);
+        int col = getCol(position);
+
+        char boardMark = this.board[row][col];
+        char newMark = boardMark == MARK_POSITION
+                       ? HIT_POSITION
+                       : MISS_POSITION;
+
+        this.board[row][col] = newMark;
+
+        return newMark == HIT_POSITION;
+    }
+
     private boolean isEmptyPosition(int row, int col) {
-        if (row < 0 || row >= SIZE ||
-            col < 0 || col >= SIZE) {
+        if (!isValidPosition(row, col)) {
             return true;
         }
 
         return this.board[row][col] == EMPTY_POSITION;
+    }
+
+    public boolean isValidPosition(Position position) {
+        int row = getRow(position);
+        int col = getCol(position);
+
+        return isValidPosition(row, col);
+    }
+
+    private boolean isValidPosition(int row, int col) {
+        return row >= 0 && row < SIZE &&
+               col >= 0 && col < SIZE;
     }
 
     private int getRow(Position position) {

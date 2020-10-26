@@ -1,5 +1,6 @@
 package battleship;
 
+import battleship.exceptions.InvalidCoordinatesException;
 import battleship.exceptions.InvalidShipLengthException;
 import battleship.exceptions.ShipLocationTooCloseException;
 
@@ -45,5 +46,13 @@ public class Game {
         }
 
         return true;
+    }
+
+    public boolean shoot(Position shotPosition) {
+        if (!board.isValidPosition(shotPosition)) {
+            throw new InvalidCoordinatesException();
+        }
+
+        return board.shoot(shotPosition);
     }
 }

@@ -7,3 +7,4 @@ public class InvalidShipLengthException extends RuntimeException {
         super(String.format("Error! Wrong length of the %s!", ship));
     }
 }
+

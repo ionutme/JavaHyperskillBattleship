@@ -1,1 +1,1 @@
-# JavaHyperskillBattleship
+# Battleship
