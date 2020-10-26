@@ -10,18 +10,39 @@ public class Main {
 
         var game = new Game();
 
-        game.board.print(System.out::print);
-
+        printEmptyBoard();
         placeShips(game, in);
-
-        System.out.println("The game starts!");
-
-        game.board.print(System.out::print);
-
-        takeAShoot(game, in);
+        printStartOfGame();
+        takeOneShot(game, in);
     }
 
-    private static void takeAShoot(Game game, Scanner in) {
+    private static void placeShips(Game game, Scanner in) {
+        for (Ship ship : Ship.values()) {
+            System.out.printf("Enter the coordinates of the %s (%d cells):", ship, ship.size);
+
+            placeShip(game, ship, in);
+
+            game.board.print(System.out::print);
+        }
+    }
+
+    private static void placeShip(Game game, Ship ship, Scanner in) {
+        String p1 = in.next();
+        String p2 = in.next();
+
+        try {
+            game.placeShip(new Coordinates(p1, p2), ship);
+        } catch (InvalidShipLocationException |
+                InvalidShipLengthException |
+                ShipLocationTooCloseException exception) {
+            System.out.println(exception.getMessage() + " " + "Try Again:");
+
+            // recursive retry
+            placeShip(game, ship, in);
+        }
+    }
+
+    private static void takeOneShot(Game game, Scanner in) {
         System.out.println("Take a shot!");
 
         shoot(game, in);
@@ -44,34 +65,20 @@ public class Main {
     }
 
     private static void printShot(Board board, boolean hit) {
-        board.print(System.out::print);
+        board.printShots(System.out::print);
 
         System.out.printf("You %s !", hit ? "hit a ship" : "missed");
+
+        board.print(System.out::print);
     }
 
-    private static void placeShips(Game game, Scanner in) {
-        for (Ship ship : Ship.values()) {
-            System.out.printf("Enter the coordinates of the %s (%d cells):", ship, ship.size);
+    private static void printStartOfGame() {
+        System.out.println("The game starts!");
 
-            placeShip(game, ship, in);
-
-            game.board.print(System.out::print);
-        }
+        printEmptyBoard();
     }
 
-    private static void placeShip(Game game, Ship ship, Scanner in) {
-        String p1 = in.next();
-        String p2 = in.next();
-
-        try {
-            game.placeShip(new Coordinates(p1, p2), ship);
-        } catch (InvalidShipLocationException |
-                 InvalidShipLengthException |
-                 ShipLocationTooCloseException exception) {
-            System.out.println(exception.getMessage() + " " + "Try Again:");
-
-            // recursive retry
-            placeShip(game, ship, in);
-        }
+    private static void printEmptyBoard() {
+        new Board().print(System.out::print);
     }
 }

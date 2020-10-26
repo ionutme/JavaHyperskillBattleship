@@ -16,14 +16,28 @@ public class Board {
     }
 
     public void print(Consumer<String> func) {
+        print(func, true);
+    }
+
+    public void printShots(Consumer<String> func) {
+        print(func, false);
+    }
+
+    private void print(Consumer<String> func, boolean showShips) {
         String[][] printableBoard = this.getBoardWithMargins();
         for (int i = 0; i < printableBoard.length; i++) {
             for (int j = 0; j < printableBoard.length; j++) {
-                func.accept(printableBoard[i][j] + " ");
+                String mark = getMarkRepresentation(printableBoard[i][j], showShips);
+
+                func.accept(mark + " ");
             }
 
             func.accept(System.lineSeparator());
         }
+    }
+
+    private String getMarkRepresentation(String mark, boolean showShip) {
+        return showShip ? mark : Character.toString(EMPTY_POSITION);
     }
 
     private static char[][] getEmptyBoard() {
