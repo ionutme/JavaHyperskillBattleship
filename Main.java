@@ -17,28 +17,28 @@ public class Main {
     }
 
     private static void placeShips(Game game, Scanner in) {
-        for (Ship ship : Ship.values()) {
-            System.out.printf("Enter the coordinates of the %s (%d cells):", ship, ship.size);
+        for (ShipType shipType : ShipType.values()) {
+            System.out.printf("Enter the coordinates of the %s (%d cells):", shipType, shipType.size);
 
-            placeShip(game, ship, in);
+            placeShip(game, shipType, in);
 
             game.board.print(System.out::print);
         }
     }
 
-    private static void placeShip(Game game, Ship ship, Scanner in) {
+    private static void placeShip(Game game, ShipType shipType, Scanner in) {
         String p1 = in.next();
         String p2 = in.next();
 
         try {
-            game.placeShip(new Coordinates(p1, p2), ship);
+            game.placeShip(new Coordinates(p1, p2), shipType);
         } catch (InvalidShipLocationException |
                 InvalidShipLengthException |
                 ShipLocationTooCloseException exception) {
             System.out.println(exception.getMessage() + " " + "Try Again:");
 
             // recursive retry
-            placeShip(game, ship, in);
+            placeShip(game, shipType, in);
         }
     }
 

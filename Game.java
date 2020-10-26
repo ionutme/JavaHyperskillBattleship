@@ -11,8 +11,8 @@ public class Game {
         this.board = new Board();
     }
 
-    public void placeShip(Coordinates coordinates, Ship ship) {
-        validate(coordinates, ship);
+    public void placeShip(Coordinates coordinates, ShipType shipType) {
+        validate(coordinates, shipType);
 
         placeShip(coordinates);
     }
@@ -28,7 +28,7 @@ public class Game {
         }
     }
 
-    private void validate(Coordinates coordinates, Ship ship) {
+    private void validate(Coordinates coordinates, ShipType ship) {
         if (coordinates.getDistance() != ship.size) {
             throw new InvalidShipLengthException(ship);
         }

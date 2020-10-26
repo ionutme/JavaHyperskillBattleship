@@ -1,6 +1,6 @@
 package battleship;
 
-public enum Ship {
+public enum ShipType {
     AircraftCarrier(5),
     Battleship(4),
     Submarine(3),
@@ -9,7 +9,7 @@ public enum Ship {
 
     final int size;
 
-    Ship(int size) {
+    ShipType(int size) {
         this.size = size;
     }
 

@@ -1,10 +1,10 @@
 package battleship.exceptions;
 
-import battleship.Ship;
+import battleship.ShipType;
 
 public class InvalidShipLengthException extends RuntimeException {
-    public InvalidShipLengthException(Ship ship) {
-        super(String.format("Error! Wrong length of the %s!", ship));
+    public InvalidShipLengthException(ShipType shipType) {
+        super(String.format("Error! Wrong length of the %s!", shipType));
     }
 }
 
