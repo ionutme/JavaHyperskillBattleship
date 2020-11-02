@@ -15,15 +15,31 @@ public class Fleet {
         ships.add(ship);
     }
 
-    public List<Ship> getAliveShips() {
-        return ships.stream().filter(Ship::isAlive).collect(Collectors.toList());
-    }
+    public boolean shoot(Position shotPosition) {
+        int countPrevAliveShips = countAliveShips();
 
-    public int countAliveShips() {
-        return (int) ships.stream().filter(Ship::isAlive).count();
+        boolean hit = false;
+        for (Ship ship : getAliveShips()) {
+
+            boolean didHit = ship.shoot(shotPosition);
+            if (didHit) {
+                hit = true;
+            }
+        }
+
+        return hit &&
+                countPrevAliveShips != countAliveShips();
     }
 
     public boolean isSank() {
         return ships.stream().allMatch(Ship::isSank);
+    }
+
+    private List<Ship> getAliveShips() {
+        return ships.stream().filter(Ship::isAlive).collect(Collectors.toList());
+    }
+
+    private int countAliveShips() {
+        return (int) ships.stream().filter(Ship::isAlive).count();
     }
 }

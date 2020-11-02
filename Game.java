@@ -4,24 +4,10 @@ import battleship.exceptions.InvalidCoordinatesException;
 import battleship.exceptions.InvalidShipLengthException;
 import battleship.exceptions.ShipLocationTooCloseException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-class GameStatus {
-    boolean isOver;
-    boolean isShipSank;
-    boolean isHit;
-
-    GameStatus(boolean isOver, boolean isShipSank, boolean isHit) {
-        this.isOver = isOver;
-        this.isShipSank = isShipSank;
-        this.isHit = isHit;
-    }
-}
+import java.util.function.Consumer;
 
 public class Game {
-    final Board board;
+    private final Board board;
     final Fleet fleet;
 
     public Game() {
@@ -29,10 +15,12 @@ public class Game {
         this.fleet = new Fleet();
     }
 
+    //region PLACE SHIPS
+
     public void placeShip(Coordinates coordinates, ShipType shipType) {
         validate(coordinates, shipType);
 
-        addShip(coordinates, shipType);
+        placeShipInFleet(coordinates, shipType);
         placeShipOnBoard(coordinates);
     }
 
@@ -47,7 +35,7 @@ public class Game {
         }
     }
 
-    private void addShip(Coordinates coordinates, ShipType shipType) {
+    private void placeShipInFleet(Coordinates coordinates, ShipType shipType) {
         this.fleet.add(new Ship(coordinates, shipType));
     }
 
@@ -56,12 +44,12 @@ public class Game {
             throw new InvalidShipLengthException(ship);
         }
 
-        if (!canPlaceShip(coordinates)) {
+        if (!canPlaceShipOnBoard(coordinates)) {
             throw new ShipLocationTooCloseException();
         }
     }
 
-    public boolean canPlaceShip(Coordinates coordinates) {
+    public boolean canPlaceShipOnBoard(Coordinates coordinates) {
         for (Position position : coordinates) {
             if (!this.board.canMark(position)) {
                 return false;
@@ -71,15 +59,15 @@ public class Game {
         return true;
     }
 
-    public boolean isOver() {
-        return fleet.isSank();
-    }
+    //endregion
 
-    public GameStatus shoot(Position shotPosition) {
+    //region SHOOT
+
+    public ShotStatus shoot(Position shotPosition) {
         boolean hit = shootOnBoard(shotPosition);
         boolean isShipSank = shootInShips(shotPosition);
 
-        return new GameStatus(isOver(), isShipSank, hit);
+        return new ShotStatus(hit, isShipSank);
     }
 
     private boolean shootOnBoard(Position shotPosition) {
@@ -91,19 +79,24 @@ public class Game {
     }
 
     private boolean shootInShips(Position shotPosition) {
-        List<Ship> aliveShips = fleet.getAliveShips();
-        int countPrevAliveShips = fleet.countAliveShips();
+        return this.fleet.shoot(shotPosition);
+    }
 
-        boolean hit = false;
-        for (Ship ship : aliveShips) {
-            boolean didHit = ship.shoot(shotPosition);
-            if (didHit) {
-                hit = true;
-            }
-        }
+    //endregion shoot
 
-        //System.out.println("-----------COMPARE " + countPrevAliveShips + " WITH " + fleet.countAliveShips() + "-------------");
+    //region PRINT
 
-        return hit && countPrevAliveShips != fleet.countAliveShips();
+    public void printBoard(Consumer<String> printFunc) {
+        this.board.print(printFunc);
+    }
+
+    public void printShots(Consumer<String> printFunc) {
+        this.board.printShots(printFunc);
+    }
+
+    //endregion
+
+    public boolean isOver() {
+        return this.fleet.isSank();
     }
 }

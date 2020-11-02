@@ -102,14 +102,17 @@ public class Board {
         int row = getRow(position);
         int col = getCol(position);
 
-        char boardMark = this.board[row][col];
-        char newMark = boardMark == MARK_POSITION || boardMark == HIT_POSITION
-                       ? HIT_POSITION
-                       : MISS_POSITION;
+        return shoot(row, col);
+    }
 
-        this.board[row][col] = newMark;
+    private boolean shoot(int row, int col) {
+        char prevMark = this.board[row][col];
+        this.board[row][col] = prevMark == MARK_POSITION ||
+                               prevMark == HIT_POSITION
+                               ? HIT_POSITION
+                               : MISS_POSITION;
 
-        return newMark == HIT_POSITION;
+        return this.board[row][col] == HIT_POSITION;
     }
 
     private boolean isEmptyPosition(int row, int col) {
