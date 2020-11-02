@@ -37,7 +37,9 @@ public class Board {
     }
 
     private String getMarkRepresentation(String mark, boolean showShip) {
-        return showShip ? mark : Character.toString(EMPTY_POSITION);
+        return showShip || !mark.equals(Character.toString(MARK_POSITION))
+               ? mark
+               : Character.toString(EMPTY_POSITION);
     }
 
     private static char[][] getEmptyBoard() {
@@ -101,7 +103,7 @@ public class Board {
         int col = getCol(position);
 
         char boardMark = this.board[row][col];
-        char newMark = boardMark == MARK_POSITION
+        char newMark = boardMark == MARK_POSITION || boardMark == HIT_POSITION
                        ? HIT_POSITION
                        : MISS_POSITION;
 

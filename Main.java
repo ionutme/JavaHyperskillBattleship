@@ -13,7 +13,7 @@ public class Main {
         printEmptyBoard();
         placeShips(game, in);
         printStartOfGame();
-        takeOneShot(game, in);
+        startShooting(game, in);
     }
 
     private static void placeShips(Game game, Scanner in) {
@@ -42,34 +42,39 @@ public class Main {
         }
     }
 
-    private static void takeOneShot(Game game, Scanner in) {
+    private static void startShooting(Game game, Scanner in) {
         System.out.println("Take a shot!");
 
-        shoot(game, in);
+        while (!game.isOver()) {
+            GameStatus shot = shoot(game, in);
+
+            printShot(game.board, shot);
+        }
+
+        System.out.println("You sank the last ship. You won. Congratulations!");
     }
 
-    private static void shoot(Game game, Scanner in) {
+    private static GameStatus shoot(Game game, Scanner in) {
         var shotPosition = new Position(in.next());
 
-        boolean hit = false;
         try {
-            hit = game.shoot(shotPosition);
+            return game.shoot(shotPosition);
         } catch (InvalidCoordinatesException exception) {
             System.out.println(exception.getMessage() + " " + "Try Again:");
 
             // recursive retry
-            shoot(game, in);
+            return shoot(game, in);
         }
-
-        printShot(game.board, hit);
     }
 
-    private static void printShot(Board board, boolean hit) {
+    private static void printShot(Board board, GameStatus status) {
         board.printShots(System.out::print);
 
-        System.out.printf("You %s !", hit ? "hit a ship" : "missed");
-
-        board.print(System.out::print);
+        if (status.isShipSank) {
+            System.out.println("You sank a ship! Specify a new target:");
+        } else {
+            System.out.printf("You %s Try again:", status.isHit ? "hit a ship!" : "missed.");
+        }
     }
 
     private static void printStartOfGame() {
