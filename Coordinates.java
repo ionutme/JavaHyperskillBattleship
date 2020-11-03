@@ -25,6 +25,8 @@ public class Coordinates implements Iterable<Position> {
         validate();
     }
 
+    //region VALIDATE
+
     private void validate() {
         if (!isVertical() &&
             !isHorizontal()) {
@@ -32,11 +34,9 @@ public class Coordinates implements Iterable<Position> {
         }
     }
 
-    public int getDistance() {
-        return isVertical()
-                ? getVerticalDistance()
-                : getHorizontalDistance();
-    }
+    //endregion
+
+    //region ORIENTATION
 
     /**
      * F3, F7
@@ -68,11 +68,14 @@ public class Coordinates implements Iterable<Position> {
         return isHorizontal(first, second) && first.x < second.x;
     }
 
-    /**
-     * F3 - F7 = 5
-     */
-    private int getHorizontalDistance() {
-        return getDistance(p1.x, p2.x);
+    //endregion
+
+    //region DISTANCE
+
+    public int getDistance() {
+        return isVertical()
+               ? getVerticalDistance()
+               : getHorizontalDistance();
     }
 
     /**
@@ -82,12 +85,25 @@ public class Coordinates implements Iterable<Position> {
         return getDistance(p1.y, p2.y);
     }
 
+    /**
+     * F3 - F7 = 5
+     */
+    private int getHorizontalDistance() {
+        return getDistance(p1.x, p2.x);
+    }
+
     private int getDistance(int c1, int c2) {
         return Math.abs(c1 - c2) + 1;
     }
+
+    //endregion
+
+    //region ITERATOR
 
     @Override
     public Iterator<Position> iterator() {
         return new CoordinateIterator(this);
     }
+
+    //endregion
 }

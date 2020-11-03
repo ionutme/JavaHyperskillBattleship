@@ -6,7 +6,7 @@ public class ShipPart {
 
     ShipPart(Position position) {
         this.position = position;
-        isHit = false;
+        this.isHit = false;
     }
 
     public boolean shoot(Position position) {

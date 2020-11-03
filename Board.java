@@ -12,8 +12,10 @@ public class Board {
     private static final int SIZE = 10;
 
     public Board() {
-        this.board = getEmptyBoard();
+        board = getEmptyBoard();
     }
+
+    //region PRINT
 
     public void print(Consumer<String> func) {
         print(func, true);
@@ -27,9 +29,9 @@ public class Board {
         String[][] printableBoard = this.getBoardWithMargins();
         for (int i = 0; i < printableBoard.length; i++) {
             for (int j = 0; j < printableBoard.length; j++) {
-                String mark = getMarkRepresentation(printableBoard[i][j], showShips);
+                String marker = getMarkRepresentation(printableBoard[i][j], showShips);
 
-                func.accept(mark + " ");
+                func.accept(marker + " ");
             }
 
             func.accept(System.lineSeparator());
@@ -41,6 +43,10 @@ public class Board {
                ? mark
                : Character.toString(EMPTY_POSITION);
     }
+
+    //endregion
+
+    //region BOARD & MARGINS
 
     private static char[][] getEmptyBoard() {
         char[][] board = new char[SIZE][SIZE];
@@ -55,16 +61,15 @@ public class Board {
     }
 
     private String[][] getBoardWithMargins() {
-        int sizeWithMargins = SIZE + 1;
-        var boardWithMargins = new String[sizeWithMargins][sizeWithMargins];
+        var boardWithMargins = new String[SIZE + 1][SIZE + 1];
 
         setMargins(boardWithMargins);
-        copyBoardValues(boardWithMargins);
+        setBoardValues(boardWithMargins);
 
         return boardWithMargins;
     }
 
-    private void copyBoardValues(String[][] boardWithMargins) {
+    private void setBoardValues(String[][] boardWithMargins) {
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
                 boardWithMargins[i + 1][j + 1] = Character.toString(this.board[i][j]);
@@ -80,11 +85,25 @@ public class Board {
         }
     }
 
+    //endregion
+
+    //region MARK
+
     public void mark(Position position) {
+        mark(position, MARK_POSITION);
+    }
+
+    public void markShot(Position position, boolean hit) {
+        char marker = hit ? HIT_POSITION : MISS_POSITION;
+
+        mark(position, marker);
+    }
+
+    private void mark(Position position, char marker) {
         int row = getRow(position);
         int col = getCol(position);
 
-        this.board[row][col] = MARK_POSITION;
+        this.board[row][col] = marker;
     }
 
     public boolean canMark(Position position) {
@@ -98,22 +117,33 @@ public class Board {
                isEmptyPosition(row, col + 1);
     }
 
+    //endregion
+
+    //region SHOOT
+
     public boolean shoot(Position position) {
         int row = getRow(position);
         int col = getCol(position);
 
-        return shoot(row, col);
+        char boardMark = getShotMark(row, col);
+
+        this.board[row][col] = boardMark;
+
+        return boardMark == HIT_POSITION;
     }
 
-    private boolean shoot(int row, int col) {
+    private char getShotMark(int row, int col) {
         char prevMark = this.board[row][col];
-        this.board[row][col] = prevMark == MARK_POSITION ||
-                               prevMark == HIT_POSITION
-                               ? HIT_POSITION
-                               : MISS_POSITION;
 
-        return this.board[row][col] == HIT_POSITION;
+        return prevMark == MARK_POSITION ||
+               prevMark == HIT_POSITION
+               ? HIT_POSITION
+               : MISS_POSITION;
     }
+
+    //endregion
+
+    //region POSITION
 
     private boolean isEmptyPosition(int row, int col) {
         if (!isValidPosition(row, col)) {
@@ -142,4 +172,6 @@ public class Board {
     private int getCol(Position position) {
         return position.x - 1;
     }
+
+    //endregion
 }

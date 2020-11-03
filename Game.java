@@ -2,101 +2,178 @@ package battleship;
 
 import battleship.exceptions.InvalidCoordinatesException;
 import battleship.exceptions.InvalidShipLengthException;
+import battleship.exceptions.InvalidShipLocationException;
 import battleship.exceptions.ShipLocationTooCloseException;
 
-import java.util.function.Consumer;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Scanner;
 
 public class Game {
-    private final Board board;
-    final Fleet fleet;
+    final Player playerOne;
+    final Player playerTwo;
+    private Player currentPlayer;
+    private final InputStream input;
+    private final Scanner scanner;
 
-    public Game() {
-        this.board = new Board();
-        this.fleet = new Fleet();
+    public Game(InputStream input) {
+        this.input = input;
+        this.scanner = new Scanner(this.input);
+
+        this.playerOne = new Player("1");
+        this.playerTwo = new Player("2");
+        this.currentPlayer = playerOne;
+    }
+
+    public void start() {
+        placeShips();
+
+        startShooting();
     }
 
     //region PLACE SHIPS
 
-    public void placeShip(Coordinates coordinates, ShipType shipType) {
-        validate(coordinates, shipType);
+    private void placeShips() {
+        placeShips(this.playerOne);
 
-        placeShipInFleet(coordinates, shipType);
-        placeShipOnBoard(coordinates);
+        printPressEnterAndPassToAnotherPlayer();
+
+        placeShips(this.playerTwo);
     }
 
-    /**
-     * It's -public- for test purpose only!
-     * @param coordinates Indicates 2 positions on the board.
-     *                    Ex: F3, F7.
-     */
-    public void placeShipOnBoard(Coordinates coordinates) {
-        for (Position position : coordinates) {
-            this.board.mark(position);
+    private void placeShips(Player player) {
+        printPlaceShips(player);
+
+        for (ShipType shipType : ShipType.values()) {
+            System.out.printf("Enter the coordinates of the %s (%d cells):", shipType, shipType.size);
+
+            placeShip(player, shipType);
+
+            player.printBoard(System.out::print);
         }
     }
 
-    private void placeShipInFleet(Coordinates coordinates, ShipType shipType) {
-        this.fleet.add(new Ship(coordinates, shipType));
-    }
+    private void placeShip(Player player, ShipType shipType) {
+        String p1 = this.scanner.next();
+        String p2 = this.scanner.next();
 
-    private void validate(Coordinates coordinates, ShipType ship) {
-        if (coordinates.getDistance() != ship.size) {
-            throw new InvalidShipLengthException(ship);
+        try {
+            player.placeShip(new Coordinates(p1, p2), shipType);
+        } catch (InvalidShipLocationException |
+                 InvalidShipLengthException |
+                 ShipLocationTooCloseException exception) {
+            System.out.println(exception.getMessage() + " " + "Try Again:");
+
+            // recursive retry
+            placeShip(player, shipType);
         }
-
-        if (!canPlaceShipOnBoard(coordinates)) {
-            throw new ShipLocationTooCloseException();
-        }
-    }
-
-    public boolean canPlaceShipOnBoard(Coordinates coordinates) {
-        for (Position position : coordinates) {
-            if (!this.board.canMark(position)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     //endregion
 
     //region SHOOT
 
-    public ShotStatus shoot(Position shotPosition) {
-        boolean hit = shootOnBoard(shotPosition);
-        boolean isShipSank = shootInShips(shotPosition);
+    private void startShooting() {
+        while (!isGameOver()) {
+            printPressEnterAndPassToAnotherPlayer();
 
-        return new ShotStatus(hit, isShipSank);
-    }
+            printBoards();
+            printItIsYourTurn();
 
-    private boolean shootOnBoard(Position shotPosition) {
-        if (!this.board.isValidPosition(shotPosition)) {
-            throw new InvalidCoordinatesException();
+            //VIEW SHOTS ON BOARD ALSO !!!!!!!!!!!!
+
+            var shotPosition = new Position(this.scanner.next());
+            Shot shot = shoot(getNextPlayer(), shotPosition);
+            currentPlayer.markShotsBoard(shotPosition, shot);
+            printShotResult(shot);
+
+            currentPlayer = getNextPlayer();
         }
 
-        return this.board.shoot(shotPosition);
+        System.out.println("You sank the last ship. You won. Congratulations!");
     }
 
-    private boolean shootInShips(Position shotPosition) {
-        return this.fleet.shoot(shotPosition);
-    }
+    private Shot shoot(Player player, Position shotPosition) {
+        try {
+            return player.shoot(shotPosition);
+        } catch (InvalidCoordinatesException exception) {
+            System.out.println(exception.getMessage() + " " + "Try Again:");
 
-    //endregion shoot
-
-    //region PRINT
-
-    public void printBoard(Consumer<String> printFunc) {
-        this.board.print(printFunc);
-    }
-
-    public void printShots(Consumer<String> printFunc) {
-        this.board.printShots(printFunc);
+            // recursive retry
+            return shoot(player, shotPosition);
+        }
     }
 
     //endregion
 
-    public boolean isOver() {
-        return this.fleet.isSank();
+    //region PRINT
+
+    private static void printPlaceShips(Player player) {
+        System.out.printf("Player %s, place your ships on the game field\n", player.name);
+
+        new Board().print(System.out::print);
+    }
+
+    private void printBoards() {
+        currentPlayer.printShots(System.out::print);
+
+        System.out.println("---------------------");
+
+        currentPlayer.printBoard(System.out::print);
+
+        System.out.println();
+    }
+
+    private void printShotResult(Shot shot) {
+        String result;
+
+        switch (shot) {
+            case Hit:
+                result = "You hit a ship!";
+                break;
+            case Sank:
+                result = "You sank a ship!";
+                break;
+            case Miss:
+                result = "You missed!";
+                break;
+            default:
+                result = "something unexpected has happened!";
+                break;
+        }
+
+        System.out.println(result);
+    }
+
+    private void printItIsYourTurn() {
+        System.out.printf("Player %s, it's your turn:\n", this.currentPlayer.name);
+    }
+
+    private void printPressEnterAndPassToAnotherPlayer() {
+        System.out.println("Press Enter and pass the move to another player");
+
+        waitForEnter();
+    }
+
+    //endregion
+
+    private Player getNextPlayer() {
+        if (this.currentPlayer != this.playerOne) {
+            return this.playerOne;
+        } else {
+            return this.playerTwo;
+        }
+    }
+
+    private void waitForEnter() {
+        try {
+            this.input.read();
+        } catch (IOException ignored) {
+        }
+    }
+
+    private boolean isGameOver() {
+        return this.playerOne.isDead() ||
+                this.playerTwo.isDead();
     }
 }

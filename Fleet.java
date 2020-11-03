@@ -15,9 +15,20 @@ public class Fleet {
         ships.add(ship);
     }
 
-    public boolean shoot(Position shotPosition) {
+    public Shot shoot(Position shotPosition) {
         int countPrevAliveShips = countAliveShips();
 
+        boolean hit = shootFleet(shotPosition);
+        if (!hit) {
+            return Shot.Miss;
+        } else if (countAliveShips() == countPrevAliveShips) {
+            return Shot.Hit;
+        } else {
+            return Shot.Sank;
+        }
+    }
+
+    private boolean shootFleet(Position shotPosition) {
         boolean hit = false;
         for (Ship ship : getAliveShips()) {
 
@@ -27,8 +38,7 @@ public class Fleet {
             }
         }
 
-        return hit &&
-                countPrevAliveShips != countAliveShips();
+        return hit;
     }
 
     public boolean isSank() {
