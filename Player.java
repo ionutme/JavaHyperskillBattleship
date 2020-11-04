@@ -7,16 +7,16 @@ import battleship.exceptions.ShipLocationTooCloseException;
 import java.util.function.Consumer;
 
 public class Player {
+    final String name;
     private final Board board;
     private final Board shotsBoard;
     final Fleet fleet;
-    final String name;
 
     public Player(String name) {
+        this.name = name;
         this.board = new Board();
         this.shotsBoard = new Board();
         this.fleet = new Fleet();
-        this.name = name;
     }
 
     //region PLACE SHIPS
@@ -68,7 +68,10 @@ public class Player {
     //region SHOOT
 
     public void markShotsBoard(Position position, Shot shot) {
-        this.shotsBoard.markShot(position, shot == Shot.Hit || shot == Shot.Sank);
+        boolean isHit = shot == Shot.Hit ||
+                        shot == Shot.Sank;
+
+        shotsBoard.markShot(position, isHit);
     }
 
     public Shot shoot(Position shotPosition) {
@@ -103,7 +106,11 @@ public class Player {
 
     //endregion
 
+    //region STATE
+
     public boolean isDead() {
         return this.fleet.isSank();
     }
+
+    //endregion
 }

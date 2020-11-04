@@ -3,10 +3,14 @@ package battleship;
 import java.util.function.Consumer;
 
 public class Board {
+    //region FIELD MARKS
+
     public static final char MARK_POSITION = 'O';
     public static final char EMPTY_POSITION = '~';
     public static final char HIT_POSITION = 'X';
     public static final char MISS_POSITION = 'M';
+
+    //endregion
 
     private final char[][] board;
     private static final int SIZE = 10;
@@ -89,14 +93,19 @@ public class Board {
 
     //region MARK
 
+    private char getMark(Position position) {
+        int row = getRow(position);
+        int col = getCol(position);
+
+        return this.board[row][col];
+    }
+
     public void mark(Position position) {
         mark(position, MARK_POSITION);
     }
 
     public void markShot(Position position, boolean hit) {
-        char marker = hit ? HIT_POSITION : MISS_POSITION;
-
-        mark(position, marker);
+        mark(position, hit ? HIT_POSITION : MISS_POSITION);
     }
 
     private void mark(Position position, char marker) {
@@ -122,23 +131,24 @@ public class Board {
     //region SHOOT
 
     public boolean shoot(Position position) {
-        int row = getRow(position);
-        int col = getCol(position);
+        char shotMark = getShotMark(position);
 
-        char boardMark = getShotMark(row, col);
+        mark(position, shotMark);
 
-        this.board[row][col] = boardMark;
-
-        return boardMark == HIT_POSITION;
+        return isHit(shotMark);
     }
 
-    private char getShotMark(int row, int col) {
-        char prevMark = this.board[row][col];
+    private char getShotMark(Position position) {
+        char prevMark = getMark(position);
 
         return prevMark == MARK_POSITION ||
                prevMark == HIT_POSITION
                ? HIT_POSITION
                : MISS_POSITION;
+    }
+
+    private boolean isHit(char shotMark) {
+        return shotMark == HIT_POSITION;
     }
 
     //endregion

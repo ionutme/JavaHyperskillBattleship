@@ -7,18 +7,30 @@ import battleship.exceptions.ShipLocationTooCloseException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Scanner;
 
 public class Game {
+    //region PLAYER FIELDS
+
     final Player playerOne;
     final Player playerTwo;
     private Player currentPlayer;
-    private final InputStream input;
-    private final Scanner scanner;
 
-    public Game(InputStream input) {
+    //endregion
+
+    //region I/O FIELDS
+
+    private final InputStream input;
+    private final PrintStream output;
+    private final Scanner inputReader;
+
+    //endregion
+
+    public Game(InputStream input, PrintStream out) {
         this.input = input;
-        this.scanner = new Scanner(this.input);
+        this.output = out;
+        this.inputReader = new Scanner(this.input);
 
         this.playerOne = new Player("1");
         this.playerTwo = new Player("2");
@@ -29,6 +41,8 @@ public class Game {
         placeShips();
 
         startShooting();
+
+        printCongratulations();
     }
 
     //region PLACE SHIPS
@@ -45,24 +59,24 @@ public class Game {
         printPlaceShips(player);
 
         for (ShipType shipType : ShipType.values()) {
-            System.out.printf("Enter the coordinates of the %s (%d cells):", shipType, shipType.size);
+            output.printf("Enter the coordinates of the %s (%d cells):", shipType, shipType.size);
 
             placeShip(player, shipType);
 
-            player.printBoard(System.out::print);
+            player.printBoard(output::print);
         }
     }
 
     private void placeShip(Player player, ShipType shipType) {
-        String p1 = this.scanner.next();
-        String p2 = this.scanner.next();
+        String p1 = getInputPosition();
+        String p2 = getInputPosition();
 
         try {
             player.placeShip(new Coordinates(p1, p2), shipType);
         } catch (InvalidShipLocationException |
                  InvalidShipLengthException |
                  ShipLocationTooCloseException exception) {
-            System.out.println(exception.getMessage() + " " + "Try Again:");
+            output.println(exception.getMessage() + " " + "Try Again:");
 
             // recursive retry
             placeShip(player, shipType);
@@ -75,29 +89,35 @@ public class Game {
 
     private void startShooting() {
         while (!isGameOver()) {
+            // wait user to press ENTER
             printPressEnterAndPassToAnotherPlayer();
 
+            // show both boards
             printBoards();
             printItIsYourTurn();
 
-            //VIEW SHOTS ON BOARD ALSO !!!!!!!!!!!!
+            // print shooting result
+            printShotResult(shoot(getOpponent(), getInputPosition()));
 
-            var shotPosition = new Position(this.scanner.next());
-            Shot shot = shoot(getNextPlayer(), shotPosition);
-            currentPlayer.markShotsBoard(shotPosition, shot);
-            printShotResult(shot);
-
-            currentPlayer = getNextPlayer();
+            // change turn
+            currentPlayer = getOpponent();
         }
+    }
 
-        System.out.println("You sank the last ship. You won. Congratulations!");
+    private Shot shoot(Player target, String chosenTarget) {
+        var shotPosition = new Position(chosenTarget);
+
+        Shot shot = shoot(target, shotPosition);
+        currentPlayer.markShotsBoard(shotPosition, shot);
+
+        return shot;
     }
 
     private Shot shoot(Player player, Position shotPosition) {
         try {
             return player.shoot(shotPosition);
         } catch (InvalidCoordinatesException exception) {
-            System.out.println(exception.getMessage() + " " + "Try Again:");
+            output.println(exception.getMessage() + " " + "Try Again:");
 
             // recursive retry
             return shoot(player, shotPosition);
@@ -108,20 +128,20 @@ public class Game {
 
     //region PRINT
 
-    private static void printPlaceShips(Player player) {
-        System.out.printf("Player %s, place your ships on the game field\n", player.name);
+    private void printPlaceShips(Player player) {
+        output.printf("Player %s, place your ships on the game field\n", player.name);
 
-        new Board().print(System.out::print);
+        new Board().print(output::print);
     }
 
     private void printBoards() {
-        currentPlayer.printShots(System.out::print);
+        currentPlayer.printShots(output::print);
 
-        System.out.println("---------------------");
+        output.println("---------------------");
 
-        currentPlayer.printBoard(System.out::print);
+        currentPlayer.printBoard(output::print);
 
-        System.out.println();
+        output.println();
     }
 
     private void printShotResult(Shot shot) {
@@ -142,22 +162,37 @@ public class Game {
                 break;
         }
 
-        System.out.println(result);
-    }
-
-    private void printItIsYourTurn() {
-        System.out.printf("Player %s, it's your turn:\n", this.currentPlayer.name);
+        output.println(result);
     }
 
     private void printPressEnterAndPassToAnotherPlayer() {
-        System.out.println("Press Enter and pass the move to another player");
+        output.println("Press Enter and pass the move to another player");
 
         waitForEnter();
     }
 
+    private void printItIsYourTurn() {
+        output.printf("Player %s, it's your turn:\n", this.currentPlayer.name);
+    }
+
+    private void printCongratulations() {
+        output.println("You sank the last ship. You won. Congratulations!");
+    }
+
     //endregion
 
-    private Player getNextPlayer() {
+    //region STATE
+
+    private boolean isGameOver() {
+        return this.playerOne.isDead() ||
+                this.playerTwo.isDead();
+    }
+
+    //endregion
+
+    //region PLAYERS
+
+    private Player getOpponent() {
         if (this.currentPlayer != this.playerOne) {
             return this.playerOne;
         } else {
@@ -165,15 +200,20 @@ public class Game {
         }
     }
 
+    //endregion
+
+    //region INPUT
+
     private void waitForEnter() {
         try {
-            this.input.read();
+            input.read();
         } catch (IOException ignored) {
         }
     }
 
-    private boolean isGameOver() {
-        return this.playerOne.isDead() ||
-                this.playerTwo.isDead();
+    private String getInputPosition() {
+        return inputReader.next();
     }
+
+    //endregion
 }
